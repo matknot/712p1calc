@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extrusion Calc</title>
+    <style>
+        body { font-family: Arial; max-width: 100%; margin: auto; padding: 30px; background: black; color: white; font-size: 18px; }
+        label { display: block; margin: 15px 0 7px; color: #ccc; font-size: 20px; }
+        input, select { width: 100%; padding: 12px; box-sizing: border-box; background: #333; color: white; border: 1px solid #555; font-size: 18px; }
+        button { margin: 15px 7px 0 0; padding: 12px 24px; background: #4CAF50; color: white; border: none; cursor: pointer; font-size: 18px; }
+        button:hover { background: #45a049; }
+        #results { margin-top: 30px; padding: 15px; border: 1px solid #555; display: none; background: #222; font-size: 18px; }
+        @media (max-width: 828px) { body { padding: 15px; font-size: 16px; } label { font-size: 18px; } input, select, button { font-size: 16px; } }
+    </style>
+</head>
+<body>
+    <h2 style="color: #4CAF50; font-size: 24px;">Extrusion Calculator</h2>
+    <form id="calcForm">
+        <label for="ratio">Ratio:</label>
+        <input type="number" id="ratio" name="ratio" step="0.1" min="0">
+
+        <label for="runout">Run out (m):</label>
+        <input type="number" id="runout" name="runout" step="0.1" min="0">
+
+        <label for="speed">Set Speed (m/min):</label>
+        <input type="number" id="speed" name="speed" step="0.1" min="0">
+
+        <label for="cavities">Cavities:</label>
+        <select id="cavities" name="cavities">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+        </select>
+
+        <label for="mass_kg_m">Profile Mass (kg/m, optional):</label>
+        <input type="number" id="mass_kg_m" name="mass_kg_m" step="0.1" min="0">
+
+        <label for="billet_temp">Billet Temp (°C, optional):</label>
+        <input type="number" id="billet_temp" name="billet_temp" step="1" min="0" placeholder="470">
+
+        <label for="alloy">Alloy (optional):</label>
+        <select id="alloy" name="alloy">
+            <option value="6xxx">6xxx</option>
+            <option value="7xxx">7xxx</option>
+        </select>
+
+        <button type="button" onclick="calculate()">Calculate</button>
+        <button type="button" onclick="clearForm()" style="background: #f44336;">Clear</button>
+        <button type="button" onclick="undoClear()" style="background: #2196F3;">Undo</button>
+    </form>
+
+    <div id="results">
+        <p>Burp PSI: <span id="burp" style="color: #4CAF50;"></span></p>
+        <p>Puller Force: <span id="puller_force" style="color: #4CAF50;"></span></p>
+        <p>Torque Ramp (sec): <span id="torque_ramp" style="color: #4CAF50;"></span></p>
+        <p>Puller Speed %: <span id="puller_speed" style="color: #4CAF50;"></span></p>
+    </div>
+
+    <script>
+        let savedValues = {};
+        function calculate() {
+            const formData = new FormData(document.getElementById('calcForm'));
+            fetch('/calculate', { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('burp').textContent = data.burp_psi;
+                    document.getElementById('puller_speed').textContent = data.puller_speed_pct;
+                    document.getElementById('torque_ramp').textContent = data.torque_ramp_time + 's';
+                    document.getElementById('puller_force').textContent = data.puller_force;
+                    document.getElementById('results').style.display = 'block';
+                });
+        }
+        function clearForm() {
+            const inputs = document.querySelectorAll('input[type="number"], select');
+            inputs.forEach(input => { savedValues[input.id] = input.value; });
+            document.getElementById('calcForm').reset();
+            document.getElementById('cavities').value = '1';
+            document.getElementById('alloy').value = '6xxx';
+            document.getElementById('results').style.display = 'none';
+        }
+        function undoClear() {
+            Object.keys(savedValues).forEach(id => {
+                const input = document.getElementById(id);
+                if (input) input.value = savedValues[id];
+            });
+        }
+    </script>
+</body>
+</html>
