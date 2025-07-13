@@ -31,7 +31,7 @@ def extrusion_calculator(setpoint_speed,
         torque_ramp_time *= (1 + mass_kg_m * 0.1)  # Longer for heavier
     torque_ramp_time = min(10.0, max(0.1, torque_ramp_time))
 
-    base_force = 500 + 220 * ((die_cavities - 1) / 3)
+    base_force = 1200 + 170 * ((die_cavities - 1) / 3)
     ratio_factor = 0.5 * ((math.log(ratio) - math.log(10)) /
                           (math.log(100) - math.log(10)))
     temp_factor = 0.1 * ((500 - billet_temp_C) / 30)
